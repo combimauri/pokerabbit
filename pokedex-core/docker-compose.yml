@@ -1,0 +1,22 @@
+version: '3'
+services:
+  pokemon-service:
+    build: ./pokemon-service
+    ports:
+      - "3000:3000"
+    depends_on:
+      - pokemon-db
+    environment:
+      - DATABASE_HOST=pokemon-db
+    networks:
+      - pokemonnetwork
+  pokemon-db:
+    build: ./pokemon-db
+    ports:
+      - "3306:3306"
+    networks:
+      - pokemonnetwork
+
+networks:
+  pokemonnetwork:
+    driver: "bridge"

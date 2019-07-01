@@ -1,5 +1,27 @@
-version: '3'
+version: '3.2'
 services:
+
+  myrabbitmq:
+    build: ./rabbitmq-service
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_NODENAME=pokerabbit
+    hostname: rabbitmqhost
+    networks:
+      - pokemonnetwork
+
+  log-service:
+    build: ./log-service
+    restart: on-failure
+    depends_on:
+      - myrabbitmq
+    links:
+      - myrabbitmq
+    networks:
+      - pokemonnetwork
+
   pokemon-service:
     build: ./pokemon-service
     ports:
@@ -8,8 +30,11 @@ services:
       - pokemon-db
     environment:
       - DATABASE_HOST=pokemon-db
+    links:
+      - myrabbitmq
     networks:
       - pokemonnetwork
+
   pokemon-db:
     build: ./pokemon-db
     ports:

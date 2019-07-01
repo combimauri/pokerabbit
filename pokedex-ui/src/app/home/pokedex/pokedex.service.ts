@@ -13,4 +13,10 @@ export class PokedexService {
   getPokemon(): Observable<Pokemon[]> {
     return this.http.get<Pokemon[]>(`${environment.baseUrl}/pokemon`);
   }
+
+  getPokemonByNumber(pokenumber: number): Observable<Pokemon> {
+    return this.http.get<Pokemon>(
+      `${environment.baseUrl}/pokemon/${pokenumber}`
+    );
+  }
 }

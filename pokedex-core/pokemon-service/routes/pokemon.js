@@ -3,6 +3,7 @@ const cors = require('cors')({
   origin: true
 });
 const router = express.Router();
+const logger = require('../services/logger');
 
 const ALLOWED_ORIGINS = ['http://localhost:4200', 'http://localhost:8080'];
 
@@ -23,6 +24,8 @@ router.get('/', (req, res) => {
       if (error) {
         res.status(500).send(error);
       } else {
+        console.log('fine');
+        logger.emitLog();
         res.status(200).send(results);
       }
     });

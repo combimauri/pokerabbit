@@ -1,0 +1,5 @@
+FROM rabbitmq
+
+ENV RABBITMQ_NODENAME=pokerabbit
+
+EXPOSE 15672 5672

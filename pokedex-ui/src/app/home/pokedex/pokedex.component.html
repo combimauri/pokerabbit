@@ -1,1 +1,13 @@
-<p>pokedex works!</p>
+<div class="row">
+  <div *ngFor="let pokemon of pokemon$ | async" class="col s12 m4">
+    <div class="card">
+      <div class="card-image">
+        <img [src]="pokemon.picture_url">
+        <span class="card-title black-text">#{{ pokemon.pokenumber }} {{ pokemon.pokename }}</span>
+      </div>
+      <div class="card-action">
+        <a [routerLink]="['/pokemon', pokemon.pokenumber]">See More</a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,10 +1,12 @@
-FROM node:8
+FROM node
 
-ADD . /pokedex/pokemon-service
-
-RUN cd /pokedex/pokemon-service; \
+ADD . /app/pokemon-service
+RUN cd /app/pokemon-service; \
     npm install
+
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.5.0/wait /wait
+RUN chmod +x /wait
 
 EXPOSE 3000
 
-CMD ["node", "/pokedex/pokemon-service/bin/www"]
+CMD /wait && node /app/pokemon-service/pokemon-service.js

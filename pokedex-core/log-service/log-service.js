@@ -1,6 +1,8 @@
 var amqp = require('amqplib/callback_api');
 
-amqp.connect('amqp://myrabbitmq', (error0, connection) => {
+const amqpConnString = `amqp://${process.env.RABBITMQ_HOST || 'localhost'}`;
+
+amqp.connect(amqpConnString, (error0, connection) => {
   if (error0) {
     throw error0;
   }
@@ -13,10 +15,10 @@ amqp.connect('amqp://myrabbitmq', (error0, connection) => {
     var exchange = 'logs';
 
     channel.assertExchange(exchange, 'fanout', {
-      durable: false
+      durable: true
     });
 
-    channel.assertQueue('', { exclusive: true }, (error2, q) => {
+    channel.assertQueue('', { durable: true }, (error2, q) => {
       if (error2) {
         throw error2;
       }

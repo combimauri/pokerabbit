@@ -1,8 +1,10 @@
-FROM node:8
+FROM node
 
 ADD . /pokedex/log-service
-
 RUN cd /pokedex/log-service; \
     npm install
 
-CMD ["node", "/pokedex/log-service/consumer.js"]
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.5.0/wait /wait
+RUN chmod +x /wait
+
+CMD /wait && node /pokedex/log-service/log-service.js

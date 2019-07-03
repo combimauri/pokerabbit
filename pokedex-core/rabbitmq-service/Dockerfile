@@ -1,5 +1,5 @@
 FROM rabbitmq
 
-ENV RABBITMQ_NODENAME=pokerabbit
+RUN rabbitmq-plugins enable --offline rabbitmq_management
 
 EXPOSE 15672 5672

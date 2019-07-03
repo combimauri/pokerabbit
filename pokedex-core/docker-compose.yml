@@ -1,47 +1,47 @@
 version: '3.2'
-services:
 
+services:
   myrabbitmq:
     build: ./rabbitmq-service
     ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_NODENAME=pokerabbit
-    hostname: rabbitmqhost
-    networks:
-      - pokemonnetwork
-
-  log-service:
-    build: ./log-service
-    restart: on-failure
-    depends_on:
-      - myrabbitmq
-    links:
-      - myrabbitmq
-    networks:
-      - pokemonnetwork
-
-  pokemon-service:
-    build: ./pokemon-service
-    ports:
-      - "3000:3000"
-    depends_on:
-      - pokemon-db
-    environment:
-      - DATABASE_HOST=pokemon-db
-    links:
-      - myrabbitmq
+      - '5672:5672'
+      - '15672:15672'
+    hostname: myrabbitmq
     networks:
       - pokemonnetwork
 
   pokemon-db:
     build: ./pokemon-db
     ports:
-      - "3306:3306"
+      - '3306:3306'
+    networks:
+      - pokemonnetwork
+
+  log-service:
+    build: ./log-service
+    depends_on:
+      - myrabbitmq
+    environment:
+      - WAIT_HOSTS=myrabbitmq:5672
+      - RABBITMQ_HOST=myrabbitmq
+    networks:
+      - pokemonnetwork
+
+  pokemon-service:
+    build: ./pokemon-service
+    ports:
+      - '3000:3000'
+    depends_on:
+      - myrabbitmq
+      - pokemon-db
+    environment:
+      - WAIT_HOSTS=myrabbitmq:5672,pokemon-db:3306
+      - WAIT_HOSTS_TIMEOUT=240
+      - DATABASE_HOST=pokemon-db
+      - RABBITMQ_HOST=myrabbitmq
     networks:
       - pokemonnetwork
 
 networks:
   pokemonnetwork:
-    driver: "bridge"
+    driver: 'bridge'

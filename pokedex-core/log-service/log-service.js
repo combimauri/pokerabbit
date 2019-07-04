@@ -1,45 +1,46 @@
-var amqp = require('amqplib/callback_api');
+var amqp = require('amqplib');
 
 const amqpConnString = `amqp://${process.env.RABBITMQ_HOST || 'localhost'}`;
+const exchangeName = 'logs';
+const exchanngeType = 'direct';
+const args = process.argv.slice(2);
 
-amqp.connect(amqpConnString, (error0, connection) => {
-  if (error0) {
-    throw error0;
+const listenForMessages = async () => {
+  if (args.length === 0) {
+    console.log('Usage: node log_service.js [info] [error]');
+    process.exit(1);
   }
 
-  connection.createChannel((error1, channel) => {
-    if (error1) {
-      throw error1;
-    }
+  let amqpConnection = await amqp.connect(amqpConnString);
+  let mainChannel = await amqpConnection.createChannel();
 
-    var exchange = 'logs';
-
-    channel.assertExchange(exchange, 'fanout', {
-      durable: true
-    });
-
-    channel.assertQueue('', { durable: true }, (error2, q) => {
-      if (error2) {
-        throw error2;
-      }
-
-      console.log(
-        ' [*] Waiting for messages in %s. To exit press CTRL+C',
-        q.queue
-      );
-
-      channel.bindQueue(q.queue, exchange, '');
-      channel.consume(
-        q.queue,
-        msg => {
-          if (msg.content) {
-            console.log(' [x] %s', msg.content.toString());
-          }
-        },
-        {
-          noAck: true
-        }
-      );
-    });
+  mainChannel.assertExchange(exchangeName, exchanngeType, {
+    durable: true
   });
-});
+
+  let queueData = await mainChannel.assertQueue('', { durable: true });
+
+  console.log(' [*] Waiting for logs in %s.', queueData.queue);
+
+  args.forEach(severity => {
+    mainChannel.bindQueue(queueData.queue, exchangeName, severity);
+  });
+  mainChannel.prefetch(1);
+  mainChannel.consume(
+    queueData.queue,
+    msg => {
+      if (msg.content) {
+        console.log(
+          " [x] %s: '%s' \n",
+          msg.fields.routingKey,
+          msg.content.toString()
+        );
+      }
+    },
+    {
+      noAck: true
+    }
+  );
+};
+
+listenForMessages();

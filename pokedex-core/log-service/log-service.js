@@ -1,5 +1,7 @@
-var amqp = require('amqplib');
+const amqp = require('amqplib');
+const randomName = require('node-random-name');
 
+const serviceName = randomName();
 const amqpConnString = `amqp://${process.env.RABBITMQ_HOST || 'localhost'}`;
 const exchangeName = 'logs';
 const exchanngeType = 'direct';
@@ -19,28 +21,53 @@ const listenForMessages = async () => {
   });
 
   let queueData = await mainChannel.assertQueue('', { durable: true });
-
-  console.log(' [*] Waiting for logs in %s.', queueData.queue);
+  let severities = '';
 
   args.forEach(severity => {
+    severities += `${severity} `;
     mainChannel.bindQueue(queueData.queue, exchangeName, severity);
   });
+  console.log(
+    ' [*] %s waiting for %slogs in %s. \n',
+    serviceName,
+    severities,
+    queueData.queue
+  );
   mainChannel.prefetch(1);
   mainChannel.consume(
     queueData.queue,
     msg => {
       if (msg.content) {
         console.log(
-          " [x] %s: '%s' \n",
+          " [x] %s received %s: '%s' \n",
+          serviceName,
           msg.fields.routingKey,
           msg.content.toString()
         );
+
+        processMessage(msg).then(msg => {
+          console.log(
+            " [x] %s processed %s: '%s' \n",
+            serviceName,
+            msg.fields.routingKey,
+            msg.content.toString()
+          );
+          mainChannel.ack(msg);
+        });
       }
     },
     {
-      noAck: true
+      noAck: false
     }
   );
+};
+
+const processMessage = msg => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(msg);
+    }, 5000);
+  });
 };
 
 listenForMessages();

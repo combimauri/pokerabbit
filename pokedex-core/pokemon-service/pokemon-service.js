@@ -13,7 +13,11 @@ const infoSeverity = 'info';
 const errorSeverity = 'error';
 const dbConnHost = `${process.env.DATABASE_HOST || 'localhost'}`;
 const amqpConnString = `amqp://${process.env.RABBITMQ_HOST || 'localhost'}`;
-const allowedOrigins = ['http://localhost:4200', 'http://localhost:8000'];
+const allowedOrigins = [
+  'http://localhost:4200',
+  'http://localhost:8080',
+  `http://${process.env.CLIENT_HOST}:8080`
+];
 
 let dbConnection;
 let amqpConnection;
@@ -22,10 +26,11 @@ let mainChannel;
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (allowedOrigins.indexOf(origin) === -1) {
+      if (origin && allowedOrigins.indexOf(origin) === -1) {
         var msg =
           'The CORS policy for this site does not ' +
-          'allow access from the specified Origin.';
+          'allow access from the specified Origin: ' +
+          origin;
         return callback(new Error(msg), false);
       }
       return callback(null, true);
@@ -62,7 +67,7 @@ app.get('/pokemon/:pokenumber', async (req, res) => {
           publishToChannel(data, infoSeverity);
           res.status(200).send(data);
         } else {
-          err = 'Pokemon does not exist in the db';
+          err = `Pokemon #${pokenumber} does not exist in the database`;
           publishToChannel(err, errorSeverity);
           res.status(500).send(err);
         }

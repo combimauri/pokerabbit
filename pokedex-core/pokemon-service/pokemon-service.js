@@ -23,6 +23,8 @@ let dbConnection;
 let amqpConnection;
 let mainChannel;
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -37,8 +39,6 @@ app.use(
     }
   })
 );
-
-app.use(bodyParser.json());
 
 app.get('/pokemon', async (req, res) => {
   dbConnection.query('SELECT * FROM pokemon', (err, result) => {
@@ -74,6 +74,37 @@ app.get('/pokemon/:pokenumber', async (req, res) => {
       }
     }
   );
+});
+
+app.post('/pokemon', async (req, res) => {
+  const pokemon = req.body;
+
+  if (
+    pokemon &&
+    pokemon.pokenumber &&
+    pokemon.pokename &&
+    pokemon.picture_url
+  ) {
+    dbConnection.query(
+      `INSERT INTO pokemon (pokenumber, pokename, picture_url) values (${
+        pokemon.pokenumber
+      }, '${pokemon.pokename}', '${pokemon.picture_url}');`,
+      err => {
+        if (err) {
+          publishToChannel(err, errorSeverity);
+          res.status(500).send(err);
+        } else {
+          publishToChannel(pokemon, infoSeverity);
+          res.status(200).send(pokemon);
+        }
+      }
+    );
+  } else {
+    const err =
+      'Error inserting pokemon in the database: Pokemon data is incomplete';
+    publishToChannel(err, errorSeverity);
+    res.status(500).send(err);
+  }
 });
 
 const publishToChannel = (data, severity) => {

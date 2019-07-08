@@ -19,4 +19,8 @@ export class PokedexService {
       `${environment.baseUrl}/pokemon/${pokenumber}`
     );
   }
+
+  savePokemon(pokemon: Pokemon): Observable<any> {
+    return this.http.post<any>(`${environment.baseUrl}/pokemon`, pokemon);
+  }
 }

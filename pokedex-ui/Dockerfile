@@ -1,12 +1,11 @@
 FROM node
 
 ADD . /pokedex/ui
-RUN npm install -g @angular/cli http-server; \
-    cd /pokedex/ui; \
+RUN cd /pokedex/ui; \
     npm install; \
-    ng build --prod; \
+    npm run build; \
     cat ./dist/pokedex-ui/index.html > ./dist/pokedex-ui/404.html
 
 EXPOSE 8080
 
-CMD http-server /pokedex/ui/dist/pokedex-ui
+CMD npm --prefix /pokedex/ui run http-server
